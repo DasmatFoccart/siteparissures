@@ -8,14 +8,15 @@
     body {
       font-family: Arial, sans-serif;
       margin: 20px;
+      background-color: #f0f0f0;
     }
     .container {
-      max-width: 400px;
+      max-width: 600px;
       margin: 0 auto;
       padding: 20px;
       border: 1px solid #ccc;
       border-radius: 10px;
-      background-color: #f9f9f9;
+      background-color: #fff;
     }
     label {
       display: block;
@@ -26,6 +27,8 @@
       padding: 8px;
       margin-bottom: 20px;
       box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
     }
     button {
       width: 100%;
@@ -44,6 +47,29 @@
       font-size: 1.2em;
       font-weight: bold;
     }
+    .error {
+      color: red;
+      font-size: 1em;
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      margin-top: 30px;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    select {
+      padding: 5px;
+    }
   </style>
 </head>
 <body>
@@ -51,13 +77,13 @@
     <h1>Calculateur de Cote, Mise et Gain</h1>
     
     <label for="coteInitiale">Cote Initiale :</label>
-    <input type="number" id="coteInitiale" placeholder="Entrez la cote initiale">
+    <input type="number" id="coteInitiale" placeholder="Entrez la cote initiale" required>
     
     <label for="miseInitiale">Mise Initiale :</label>
-    <input type="number" id="miseInitiale" placeholder="Entrez la mise initiale">
+    <input type="number" id="miseInitiale" placeholder="Entrez la mise initiale" required>
     
     <label for="interessement">Intéressement (%):</label>
-    <input type="number" id="interessement" placeholder="Entrez l'intéressement">
+    <input type="number" id="interessement" placeholder="Entrez l'intéressement" required>
     
     <button onclick="calculer()">Calculer</button>
     
@@ -66,17 +92,52 @@
       <p>Mise à placer : <span id="miseAPlacer"></span></p>
       <p>Gain Final : <span id="gainFinal"></span></p>
     </div>
+    
+    <div id="error-message" class="error"></div>
+    
+    <h2>Historique des Mises</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Mise Initiale</th>
+          <th>Cote Cible</th>
+          <th>Mise à Placer</th>
+          <th>Gain Final</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody id="historique">
+        <!-- Historique des mises sera ajouté ici -->
+      </tbody>
+    </table>
   </div>
 
   <script>
+    let totalMise = 0; // Variable pour garder trace de la somme des mises
+    let historiqueMises = []; // Tableau pour stocker l'historique des mises
+    let currentReference = 0; // Référence de la position en cours
+
     function calculer() {
       // Récupérer les valeurs d'entrée
       const coteInitiale = parseFloat(document.getElementById('coteInitiale').value);
       const miseInitiale = parseFloat(document.getElementById('miseInitiale').value);
       const interessement = parseFloat(document.getElementById('interessement').value) / 100; // Convertir en décimal
 
+      // Vérification des champs vides ou invalides
+      if (isNaN(coteInitiale) || isNaN(miseInitiale) || isNaN(interessement)) {
+        document.getElementById('error-message').innerText = "Veuillez entrer des valeurs valides dans tous les champs.";
+        return;
+      }
+
       // Calculer la Cote Cible
       const coteCible = ((1 + interessement) * coteInitiale) / (coteInitiale - 1 - interessement);
+
+      // Prévenir de la division par zéro
+      if (coteCible <= 0) {
+        document.getElementById('error-message').innerText = "La Cote Initiale ou l'Intéressement sont invalides.";
+        return;
+      }
 
       // Calculer la Mise à placer
       const miseAPlacer = (miseInitiale * coteInitiale) / coteCible;
@@ -84,10 +145,87 @@
       // Calculer le Gain Final
       const gainFinal = (coteInitiale * miseInitiale) - miseInitiale - miseAPlacer;
 
-      // Afficher les résultats
+      // Ajouter la mise initiale à la somme totale
+      totalMise += miseInitiale;
+
+      // Ajouter la mise initiale et la mise à placer à l'historique
+      const reference = currentReference++; // Générer une référence unique
+      historiqueMises.push({
+        reference: reference,
+        miseInitiale: miseInitiale,
+        coteCible: coteCible.toFixed(2),
+        miseAPlacer: miseAPlacer.toFixed(2),
+        gainFinal: gainFinal.toFixed(2),
+        statut: 'Ouverte', // La mise est encore ouverte jusqu'à confirmation
+        misePlacee: false, // Indicateur que la mise n'est pas encore placée
+      });
+
+      // Mettre à jour l'affichage des résultats
       document.getElementById('coteCible').innerText = coteCible.toFixed(2);
       document.getElementById('miseAPlacer').innerText = miseAPlacer.toFixed(2);
       document.getElementById('gainFinal').innerText = gainFinal.toFixed(2);
+      
+      // Effacer le message d'erreur
+      document.getElementById('error-message').innerText = '';
+
+      // Mettre à jour l'historique
+      afficherHistorique();
+
+      // Afficher le total des mises
+      alert(`La somme totale des mises est maintenant de ${totalMise.toFixed(2)}.`);
+
+      // Réinitialiser les champs pour un nouveau calcul
+      document.getElementById('coteInitiale').value = '';
+      document.getElementById('miseInitiale').value = '';
+      document.getElementById('interessement').value = '';
+    }
+
+    // Fonction pour afficher l'historique des mises
+    function afficherHistorique() {
+      const historiqueElement = document.getElementById('historique');
+      historiqueElement.innerHTML = ''; // Vider l'historique actuel
+
+      historiqueMises.forEach((mise) => {
+        // Première ligne (mise initiale)
+        const row1 = document.createElement('tr');
+        row1.innerHTML = `
+          <td>${mise.reference}</td>
+          <td>${mise.miseInitiale.toFixed(2)}</td>
+          <td></td> <!-- Cote Cible vide pour la première ligne -->
+          <td></td> <!-- Mise à Placer vide pour la première ligne -->
+          <td></td> <!-- Gain Final vide pour la première ligne -->
+          <td>${mise.statut}</td>
+        `;
+        // Deuxième ligne (résultats du calcul)
+        const row2 = document.createElement('tr');
+        row2.innerHTML = `
+          <td>${mise.reference}</td>
+          <td></td> <!-- Mise Initiale vide pour la deuxième ligne -->
+          <td>${mise.coteCible}</td>
+          <td>${mise.miseAPlacer}</td>
+          <td>${mise.gainFinal}</td>
+          <td>
+            ${mise.misePlacee ? 
+                `<span>Placée</span>` :
+                `<button onclick="placerMise(${mise.reference})">Placer Mise</button>`
+            }
+          </td>
+        `;
+        
+        // Ajouter les lignes à l'historique
+        historiqueElement.appendChild(row1);
+        historiqueElement.appendChild(row2);
+      });
+    }
+
+    // Fonction pour mettre à jour le statut de la mise comme "Placée"
+    function placerMise(reference) {
+      const mise = historiqueMises.find(m => m.reference === reference);
+      if (mise && !mise.misePlacee) {
+        mise.misePlacee = true;
+        mise.statut = 'Placée';
+        afficherHistorique();
+      }
     }
   </script>
 </body>
