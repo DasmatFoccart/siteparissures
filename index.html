@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculateur de Cote, Mise et Gain</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #f9f9f9;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Calculateur de Cote, Mise et Gain</h1>
+    
+    <label for="coteInitiale">Cote Initiale :</label>
+    <input type="number" id="coteInitiale" placeholder="Entrez la cote initiale">
+    
+    <label for="miseInitiale">Mise Initiale :</label>
+    <input type="number" id="miseInitiale" placeholder="Entrez la mise initiale">
+    
+    <label for="interessement">Intéressement (%):</label>
+    <input type="number" id="interessement" placeholder="Entrez l'intéressement">
+    
+    <button onclick="calculer()">Calculer</button>
+    
+    <div class="result">
+      <p>Cote Cible : <span id="coteCible"></span></p>
+      <p>Mise à placer : <span id="miseAPlacer"></span></p>
+      <p>Gain Final : <span id="gainFinal"></span></p>
+    </div>
+  </div>
+
+  <script>
+    function calculer() {
+      // Récupérer les valeurs d'entrée
+      const coteInitiale = parseFloat(document.getElementById('coteInitiale').value);
+      const miseInitiale = parseFloat(document.getElementById('miseInitiale').value);
+      const interessement = parseFloat(document.getElementById('interessement').value) / 100; // Convertir en décimal
+
+      // Calculer la Cote Cible
+      const coteCible = ((1 + interessement) * coteInitiale) / (coteInitiale - 1 - interessement);
+
+      // Calculer la Mise à placer
+      const miseAPlacer = (miseInitiale * coteInitiale) / coteCible;
+
+      // Calculer le Gain Final
+      const gainFinal = (coteInitiale * miseInitiale) - miseInitiale - miseAPlacer;
+
+      // Afficher les résultats
+      document.getElementById('coteCible').innerText = coteCible.toFixed(2);
+      document.getElementById('miseAPlacer').innerText = miseAPlacer.toFixed(2);
+      document.getElementById('gainFinal').innerText = gainFinal.toFixed(2);
+    }
+  </script>
+</body>
+</html>
